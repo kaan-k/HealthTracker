@@ -1,6 +1,4 @@
 ﻿using Entities.Dtos;
-using System.Collections.Generic;
-
 public interface IWeightLogService
 {
     void AddWeightLog(WeightLogDto dto);

@@ -16,6 +16,7 @@ namespace HealthTracker
         private readonly IMealService _mealService;
         private readonly IWeightLogService _weightLogService;
         private readonly IWorkoutService _workoutService;
+        private readonly IWaterLogService _waterLogService;
 
         private FlowLayoutPanel panelButtons;
         private MaterialButton btnAddUser;
@@ -24,15 +25,17 @@ namespace HealthTracker
         private MaterialButton btnDeleteUser;
         private MaterialButton btnRefresh;
         private MaterialButton btnWeightLogs;
+        private MaterialButton btnWaterLogs;
         private MaterialListView dgvUsers;
         private MaterialButton btnMeals;
 
-        public UserForm(IUserService userService,IMealService mealService,IWeightLogService weightLogService,IWorkoutService workoutService)
+        public UserForm(IUserService userService,IMealService mealService,IWeightLogService weightLogService,IWorkoutService workoutService, IWaterLogService waterLogService)
         {
             _userService = userService;
             _mealService = mealService;
             _weightLogService = weightLogService;
             _workoutService = workoutService;
+            _waterLogService = waterLogService;
 
             ApplyMaterialSkinTheme();
             InitializeComponents();
@@ -66,7 +69,7 @@ namespace HealthTracker
             btnDeleteUser = CreateButton("Sil", btnDeleteUser_Click);
             btnRefresh = CreateButton("Yenile", btnRefresh_Click);
             btnWeightLogs = CreateButton("Kilo Geçmişi", btnWeightLogs_Click);
-
+            btnWaterLogs = CreateButton("Su Tüketimi", btnWaterLogs_Click);
             btnProgressChart = CreateButton("Kilo Değişimi", btnProgressChart_Click);
             panelButtons.Controls.Add(btnProgressChart);
 
@@ -83,7 +86,7 @@ namespace HealthTracker
             panelButtons.Controls.Add(btnDeleteUser);
             panelButtons.Controls.Add(btnRefresh);
             panelButtons.Controls.Add(btnWeightLogs);
-
+            panelButtons.Controls.Add(btnWaterLogs);
             dgvUsers = new MaterialListView
             {
                 Dock = DockStyle.Fill,
@@ -100,6 +103,10 @@ namespace HealthTracker
             dgvUsers.Columns.Add("Cinsiyet", 100);
             dgvUsers.Columns.Add("Şu anki Kilo", 150);
             dgvUsers.Columns.Add("Hedef Kilo", 150);
+            dgvUsers.Columns.Add("Aktivite", 150);
+            dgvUsers.Columns.Add("BMI", 100);
+            dgvUsers.Columns.Add("Sağlık", 150);
+            dgvUsers.Columns.Add("Hedef", 150);
 
             this.Controls.Add(dgvUsers);
             this.Controls.Add(panelButtons);
@@ -133,8 +140,16 @@ namespace HealthTracker
                 item.SubItems.Add(user.Gender);
                 item.SubItems.Add(user.CurrentWeightKg.ToString());
                 item.SubItems.Add(user.TargetWeightKg.ToString());
+
+                item.SubItems.Add(user.ActivityLevel.ToString());
+                double heightInMeters = user.HeightCm / 100.0;
+                double bmi = heightInMeters > 0 ? user.CurrentWeightKg / (heightInMeters * heightInMeters) : 0;
+                item.SubItems.Add(bmi.ToString("F1"));
+                item.SubItems.Add(user.HealthCondition.ToString());
+                item.SubItems.Add(user.Goal.ToString());
                 dgvUsers.Items.Add(item);
             }
+
 
             AutoResizeListViewColumns();
         }
@@ -143,14 +158,23 @@ namespace HealthTracker
         {
             if (dgvUsers.Columns.Count == 0) return;
 
+            dgvUsers.SuspendLayout();
+
             int totalWidth = dgvUsers.ClientSize.Width;
 
-            dgvUsers.Columns[0].Width = (int)(totalWidth * 0.05);
-            dgvUsers.Columns[1].Width = (int)(totalWidth * 0.30);
-            dgvUsers.Columns[2].Width = (int)(totalWidth * 0.10);
-            dgvUsers.Columns[3].Width = (int)(totalWidth * 0.10);
-            dgvUsers.Columns[4].Width = (int)(totalWidth * 0.20);
-            dgvUsers.Columns[5].Width = (int)(totalWidth * 0.20);
+            dgvUsers.Columns[0].Width = (int)(totalWidth * 0.06);
+            dgvUsers.Columns[1].Width = (int)(totalWidth * 0.20);
+            dgvUsers.Columns[2].Width = (int)(totalWidth * 0.07);
+            dgvUsers.Columns[3].Width = (int)(totalWidth * 0.08);
+            dgvUsers.Columns[4].Width = (int)(totalWidth * 0.13);
+            dgvUsers.Columns[5].Width = (int)(totalWidth * 0.13);
+            dgvUsers.Columns[6].Width = (int)(totalWidth * 0.13);
+            dgvUsers.Columns[7].Width = (int)(totalWidth * 0.10);
+            dgvUsers.Columns[8].Width = (int)(totalWidth * 0.10);
+            dgvUsers.Columns[9].Width = (int)(totalWidth * 0.10);
+
+
+            dgvUsers.ResumeLayout();
         }
 
         private void btnAddUser_Click(object sender, EventArgs e)
@@ -161,6 +185,22 @@ namespace HealthTracker
                 LoadUsers();
             }
         }
+        private void btnWaterLogs_Click(object sender, EventArgs e)
+        {
+            if (dgvUsers.SelectedItems.Count == 0)
+            {
+                MessageBox.Show("Lütfen kullanıcı seçin.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var selectedItem = dgvUsers.SelectedItems[0];
+            int userId = int.Parse(selectedItem.SubItems[0].Text);
+            var selectedUser = _userService.GetUserById(userId);
+
+            var form = new WaterLogForm(selectedUser, _waterLogService);
+            form.ShowDialog();
+        }
+
         private void btnProgressChart_Click(object sender, EventArgs e)
         {
             if (dgvUsers.SelectedItems.Count == 0)

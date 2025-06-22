@@ -1,5 +1,4 @@
 ﻿using Entities.Dtos;
-using System.Collections.Generic;
 
 namespace Business.Abstract
 {

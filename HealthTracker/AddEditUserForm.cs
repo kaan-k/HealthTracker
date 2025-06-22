@@ -1,5 +1,6 @@
 ﻿using Business.Abstract;
 using Entities.Dtos;
+using Entities.Enums;
 using MaterialSkin;
 using MaterialSkin.Controls;
 using System;
@@ -13,13 +14,16 @@ namespace HealthTracker
         private readonly IUserService _userService;
         private readonly UserDto _editingUser;
 
-        private TableLayoutPanel tableLayoutPanel;
+        private TableLayoutPanel layout;
         private MaterialTextBox2 txtFullName;
         private MaterialTextBox2 txtAge;
         private ComboBox cmbGender;
         private MaterialTextBox2 txtHeight;
         private MaterialTextBox2 txtCurrentWeight;
         private MaterialTextBox2 txtTargetWeight;
+        private ComboBox cmbActivityLevel;
+        private ComboBox cmbHealthCondition;
+        private ComboBox cmbGoal;
         private MaterialButton btnSave;
         private MaterialButton btnCancel;
 
@@ -28,8 +32,8 @@ namespace HealthTracker
             _userService = userService;
 
             this.Text = "Yeni Kullanıcı Ekle";
-            ApplyMaterialSkinTheme();
-            InitializeComponents();
+            ApplyTheme();
+            InitializeLayout();
         }
 
         public AddEditUserForm(IUserService userService, UserDto userToEdit) : this(userService)
@@ -43,9 +47,12 @@ namespace HealthTracker
             txtHeight.Text = userToEdit.HeightCm.ToString();
             txtCurrentWeight.Text = userToEdit.CurrentWeightKg.ToString();
             txtTargetWeight.Text = userToEdit.TargetWeightKg.ToString();
+            cmbActivityLevel.SelectedItem = userToEdit.ActivityLevel;
+            cmbHealthCondition.SelectedItem = userToEdit.HealthCondition;
+            cmbGoal.SelectedItem = userToEdit.Goal;
         }
 
-        private void ApplyMaterialSkinTheme()
+        private void ApplyTheme()
         {
             var skinManager = MaterialSkinManager.Instance;
             skinManager.AddFormToManage(this);
@@ -53,58 +60,80 @@ namespace HealthTracker
             skinManager.ColorScheme = new ColorScheme(
                 Primary.Indigo500, Primary.Indigo700, Primary.Indigo200, Accent.LightBlue200, TextShade.WHITE);
 
-            this.Size = new Size(1920, 1080);
+            this.Size = new Size(800, 950);
             this.StartPosition = FormStartPosition.CenterScreen;
         }
 
-        private void InitializeComponents()
+        private void InitializeLayout()
         {
-            tableLayoutPanel = new TableLayoutPanel
+            layout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                Padding = new Padding(100),
+                Padding = new Padding(60),
                 ColumnCount = 2,
-                RowCount = 8
+                RowCount = 10,
+                AutoSize = true
             };
 
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 300));
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            for (int i = 0; i < 8; i++)
-                tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 120));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            for (int i = 0; i < 10; i++)
+                layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 70));
 
-            txtFullName = new MaterialTextBox2() { Hint = "İsim" };
-            txtAge = new MaterialTextBox2() { Hint = "Yaş" };
-            cmbGender = new ComboBox() { DropDownStyle = ComboBoxStyle.DropDownList, Height = 40 };
-            cmbGender.Items.AddRange(new object[] { "Erkek", "Kadın" });
-            txtHeight = new MaterialTextBox2() { Hint = "Boy (cm)" };
-            txtCurrentWeight = new MaterialTextBox2() { Hint = "Mevcut Kilo (kg)" };
-            txtTargetWeight = new MaterialTextBox2() { Hint = "Hedef Kilo (kg)" };
+            txtFullName = new MaterialTextBox2 { Hint = "İsim" };
+            txtAge = new MaterialTextBox2 { Hint = "Yaş" };
+            cmbGender = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbGender.Items.AddRange(new[] { "Erkek", "Kadın" });
 
-            btnSave = new MaterialButton() { Text = "Kaydet", Type = MaterialButton.MaterialButtonType.Contained };
-            btnSave.Click += btnSave_Click;
+            txtHeight = new MaterialTextBox2 { Hint = "Boy (cm)" };
+            txtCurrentWeight = new MaterialTextBox2 { Hint = "Mevcut Kilo (kg)" };
+            txtTargetWeight = new MaterialTextBox2 { Hint = "Hedef Kilo (kg)" };
 
-            btnCancel = new MaterialButton() { Text = "İptal", Type = MaterialButton.MaterialButtonType.Contained };
+            cmbActivityLevel = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbActivityLevel.DataSource = Enum.GetValues(typeof(ActivityLevel));
+
+            cmbHealthCondition = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbHealthCondition.DataSource = Enum.GetValues(typeof(HealthCondition));
+
+            cmbGoal = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbGoal.DataSource = Enum.GetValues(typeof(UserGoal));
+
+            btnSave = new MaterialButton { Text = "Kaydet", Type = MaterialButton.MaterialButtonType.Contained };
+            btnSave.Click += BtnSave_Click;
+
+            btnCancel = new MaterialButton { Text = "İptal", Type = MaterialButton.MaterialButtonType.Contained };
             btnCancel.Click += (s, e) => this.Close();
 
-            tableLayoutPanel.Controls.Add(new Label() { Text = "İsim:", Anchor = AnchorStyles.Right, AutoSize = true }, 0, 0);
-            tableLayoutPanel.Controls.Add(txtFullName, 1, 0);
-            tableLayoutPanel.Controls.Add(new Label() { Text = "Yaş:", Anchor = AnchorStyles.Right, AutoSize = true }, 0, 1);
-            tableLayoutPanel.Controls.Add(txtAge, 1, 1);
-            tableLayoutPanel.Controls.Add(new Label() { Text = "Cinsiyet:", Anchor = AnchorStyles.Right, AutoSize = true }, 0, 2);
-            tableLayoutPanel.Controls.Add(cmbGender, 1, 2);
-            tableLayoutPanel.Controls.Add(new Label() { Text = "Boy (cm):", Anchor = AnchorStyles.Right, AutoSize = true }, 0, 3);
-            tableLayoutPanel.Controls.Add(txtHeight, 1, 3);
-            tableLayoutPanel.Controls.Add(new Label() { Text = "Mevcut Kilo:", Anchor = AnchorStyles.Right, AutoSize = true }, 0, 4);
-            tableLayoutPanel.Controls.Add(txtCurrentWeight, 1, 4);
-            tableLayoutPanel.Controls.Add(new Label() { Text = "Hedef Kilo:", Anchor = AnchorStyles.Right, AutoSize = true }, 0, 5);
-            tableLayoutPanel.Controls.Add(txtTargetWeight, 1, 5);
-            tableLayoutPanel.Controls.Add(btnSave, 0, 6);
-            tableLayoutPanel.Controls.Add(btnCancel, 1, 6);
+            AddLabeledControl("İsim:", txtFullName, 0);
+            AddLabeledControl("Yaş:", txtAge, 1);
+            AddLabeledControl("Cinsiyet:", cmbGender, 2);
+            AddLabeledControl("Boy (cm):", txtHeight, 3);
+            AddLabeledControl("Mevcut Kilo:", txtCurrentWeight, 4);
+            AddLabeledControl("Hedef Kilo:", txtTargetWeight, 5);
+            AddLabeledControl("Aktivite Düzeyi:", cmbActivityLevel, 6);
+            AddLabeledControl("Sağlık Durumu:", cmbHealthCondition, 7);
+            AddLabeledControl("Hedef:", cmbGoal, 8);
 
-            this.Controls.Add(tableLayoutPanel);
+            layout.Controls.Add(btnSave, 0, 9);
+            layout.Controls.Add(btnCancel, 1, 9);
+
+            this.Controls.Add(layout);
         }
 
-        private void btnSave_Click(object sender, EventArgs e)
+        private void AddLabeledControl(string labelText, Control inputControl, int row)
+        {
+            var label = new Label
+            {
+                Text = labelText,
+                Anchor = AnchorStyles.Right,
+                AutoSize = true
+            };
+
+            layout.Controls.Add(label, 0, row);
+            layout.Controls.Add(inputControl, 1, row);
+        }
+
+        private void BtnSave_Click(object sender, EventArgs e)
         {
             if (!TryBuildDtoFromForm(out UserDto dto))
             {
@@ -115,9 +144,7 @@ namespace HealthTracker
             try
             {
                 if (_editingUser == null)
-                {
                     _userService.AddUser(dto);
-                }
                 else
                 {
                     dto.Id = _editingUser.Id;
@@ -143,9 +170,7 @@ namespace HealthTracker
                 !double.TryParse(txtHeight.Text, out double height) ||
                 !double.TryParse(txtCurrentWeight.Text, out double currentWeight) ||
                 !double.TryParse(txtTargetWeight.Text, out double targetWeight))
-            {
                 return false;
-            }
 
             dto = new UserDto
             {
@@ -154,7 +179,11 @@ namespace HealthTracker
                 Gender = cmbGender.SelectedItem.ToString(),
                 HeightCm = height,
                 CurrentWeightKg = currentWeight,
-                TargetWeightKg = targetWeight
+                TargetWeightKg = targetWeight,
+                BMI = height > 0 ? currentWeight / ((height / 100) * (height / 100)) : 0,
+                ActivityLevel = (ActivityLevel)cmbActivityLevel.SelectedItem,
+                HealthCondition = (HealthCondition)cmbHealthCondition.SelectedItem,
+                Goal = (UserGoal)cmbGoal.SelectedItem
             };
 
             return true;

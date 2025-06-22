@@ -12,6 +12,10 @@ namespace Core.Mapping
             CreateMap<User, UserDto>().ReverseMap();
             CreateMap<WeightLog, WeightLogDto>().ReverseMap();
             CreateMap<Workout, WorkoutDto>().ReverseMap();
+            CreateMap<WaterLog, WaterLogDto>().ReverseMap();
+            CreateMap<User, UserDto>().ReverseMap();
+
+
 
         }
     }

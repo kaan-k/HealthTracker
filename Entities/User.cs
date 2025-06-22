@@ -1,4 +1,5 @@
 ﻿using Core.Constants;
+using Entities.Enums;
 using System.ComponentModel.DataAnnotations;
 
 public class User
@@ -21,4 +22,10 @@ public class User
 
     [Range(ValidationConstants.MinWeightKg, ValidationConstants.MaxWeightKg)]
     public double TargetWeightKg { get; set; }
+
+    public double BMI { get; set; }
+    public ActivityLevel ActivityLevel { get; set; }
+    public HealthCondition HealthCondition { get; set; }
+    public UserGoal Goal { get; set; }
+
 }

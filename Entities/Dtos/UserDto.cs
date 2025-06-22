@@ -1,4 +1,6 @@
-﻿namespace Entities.Dtos
+﻿using Entities.Enums;
+
+namespace Entities.Dtos
 {
     public class UserDto
     {
@@ -9,5 +11,9 @@
         public double HeightCm { get; set; }
         public double CurrentWeightKg { get; set; }
         public double TargetWeightKg { get; set; }
+        public double BMI {  get; set; }
+        public ActivityLevel ActivityLevel { get; set; }
+        public HealthCondition HealthCondition { get; set; }
+        public UserGoal Goal { get; set; }
     }
 }
